@@ -39,10 +39,10 @@
 #define SCREEN_WIDTH 128 // LCD display width, in pixels
 #define SCREEN_HEIGHT 64 // LCD display height, in pixels
 
-#define RST_PIN 4 
-#define SDA_0 5   
-#define SDA_1 17  
-#define SDA_2 16  
+#define RST_PIN 4
+#define SDA_0 5
+#define SDA_1 17
+#define SDA_2 16
 
 #define Trig_0 27
 #define Echo_0 26
@@ -56,7 +56,7 @@
 
 // Firebase declare
 #define FIREBASE_HOST "https://atm-pin-esp32-default-rtdb.firebaseio.com/"
-#define FIREBASE_AUTH "cAxqqmOjmTtXC6QfCVWthOFHd2Jq6nvicj9g1mjU"
+#define FIREBASE_AUTH "AIzaSyBjV7op_3e7jpixUcmVrBRkPIdtfeAKoWU"
 
 #define FEE_PER_PERCENT 100 // 100% pin = 10k => 1% = 100 VND
 
@@ -339,9 +339,6 @@ void unlockCel(int slot)
 }
 /////////////////////////////////////////////////////////////////////////////
 
-
-
-
 ///////////////////////// Task function /////////////////////////////////////
 /**
  * check cac o pin empty
@@ -590,7 +587,6 @@ void taskReturnPin(void *arg)
         xQueueSendToFront(xQueueListPinFull, &fullPin.slot, (TickType_t)0);
       }
     }
-
 
     delay(10000);
     lcd.clear();

@@ -55,7 +55,7 @@
 #define NUM_CELL_PIN_IN_ATM 3 // so cell pin trong ATM   3 cell
 
 // Firebase declare
-#define FIREBASE_HOST "https://atm-pin-esp32-default-rtdb.firebaseio.com/"
+#define FIREBASE_HOST "https://atm-pin-8ca54-default-rtdb.firebaseio.com/"
 #define FIREBASE_AUTH "AIzaSyBjV7op_3e7jpixUcmVrBRkPIdtfeAKoWU"
 
 #define FEE_PER_PERCENT 100 // 100% pin = 10k => 1% = 100 VND
@@ -64,8 +64,8 @@
 FirebaseData firebaseData;
 FirebaseJson json;
 // config wifi
-const char *ssid = "Nha 185";
-const char *password = "12341234";
+const char *ssid = "Minh's Iphone";
+const char *password = "taminh596";
 // set the LCD number of columns and rows
 int lcdColumns = 16;
 int lcdRows = 2;
@@ -113,10 +113,10 @@ Servo servo[NUM_CELL_PIN_IN_ATM];
 class User
 {
 public:
-  String IDPin;
-  String IDUser;
-  int Money;
-  String Name;
+  String pinId;
+  String userId;
+  int money;
+  String username;
   User() {}
 };
 User user;
@@ -126,7 +126,7 @@ class NewPin
 {
 public:
   int slot;
-  String IDPin;
+  String pinId;
   float voltage;
   int capacity;
   NewPin() {}
@@ -138,17 +138,17 @@ class FullPin
 {
 public:
   int slot;
-  String IDPin;
+  String pinId;
   FullPin() {}
 };
 FullPin fullPin;
 
 ///////////////////////////////////////////////////////////////////////////////////
 // write vi tri cell pin moi dua vao
-void writeStatusCellToFile(const char *filename, int slot, String IDPin, String status)
+void writeStatusCellToFile(const char *filename, int slot, String pinId, String status)
 {
   listStatusCellPin[slot] = status;
-  listIDCellPin[slot] = IDPin;
+  listIDCellPin[slot] = pinId;
   File outfile = SPIFFS.open(filename, "w");
   StaticJsonDocument<200> doc;
   JsonArray idPin = doc.createNestedArray("IdCellPin");
@@ -381,17 +381,17 @@ void taskCheckPin(void *arg)
           if (mfrc522[i].PICC_IsNewCardPresent() && mfrc522[i].PICC_ReadCardSerial())
           {
             Serial.print("ID Pin: ");
-            newPin.IDPin = convertByteToHex(mfrc522[i].uid.uidByte, mfrc522[i].uid.size);
-            Serial.println(newPin.IDPin);
+            newPin.pinId = convertByteToHex(mfrc522[i].uid.uidByte, mfrc522[i].uid.size);
+            Serial.println(newPin.pinId);
             vTaskDelay(2000 / portTICK_PERIOD_MS);
             lcd.clear();
             lcd.setCursor(0, 0);
             lcd.print("ID Pin");
             lcd.setCursor(0, 1);
-            lcd.print(newPin.IDPin);
+            lcd.print(newPin.pinId);
 
             // Doc duoc id Pin thi luu vi tri o moi vao flash
-            writeStatusCellToFile(filename, i, newPin.IDPin, "New");
+            writeStatusCellToFile(filename, i, newPin.pinId, "New");
             newPin.slot = i;
             // Khoa o chua pin
             lockCel(i);
@@ -530,8 +530,8 @@ void taskCheckPinFull(void *arg)
     if (xQueueReceive(xQueueListPinFull, &fullPin.slot, 0) == pdPASS)
     {
       Serial.printf("Pin full = %d; ", fullPin.slot);
-      fullPin.IDPin = listIDCellPin[fullPin.slot];
-      Serial.printf("ID: %s\n", fullPin.IDPin);
+      fullPin.pinId = listIDCellPin[fullPin.slot];
+      Serial.printf("ID: %s\n", fullPin.pinId);
       xEventGroupSetBits(xEventGroupPayMoney, BIT_EVENT_CHECK_PIN_FULL);
     }
     else
@@ -561,7 +561,7 @@ void taskReturnPin(void *arg)
     if (paySucccess)
     {
       writeStatusCellToFile(filename, fullPin.slot, "0", "Empty");            // xoa pin full
-      writeStatusCellToFile(filename, newPin.slot, newPin.IDPin, "Charging"); // them pin new
+      writeStatusCellToFile(filename, newPin.slot, newPin.pinId, "Charging"); // them pin new
       Serial.printf("Return full pin slot %d\n", fullPin.slot);
       lcd.clear();
       lcd.setCursor(0, 0);
@@ -624,7 +624,7 @@ void taskReadUser(void *arg)
 
     QueryFilter query;
     query.orderBy("IDPin");
-    query.equalTo(newPin.IDPin);
+    query.equalTo(newPin.pinId);
 
     bool statusJson = Firebase.getJSON(firebaseData, "/User", query);
     // Convert firebasedata to string
@@ -648,11 +648,11 @@ void taskReadUser(void *arg)
       const char *mIDUser = doc["IDUser"];
       const char *mMoney = doc["Money"];
       const char *mName = doc["Name"];
-      user.Name = mName;
-      user.IDUser = mIDUser;
-      user.IDPin = mIDPin;
-      user.Money = atoi(mMoney);
-      Serial.printf("-> Name User: %s; IDUser: %s; IDPin: %s; Money: %d\n", user.Name, user.IDUser, user.IDPin, user.Money);
+      user.username = mName;
+      user.userId = mIDUser;
+      user.pinId = mIDPin;
+      user.money = atoi(mMoney);
+      Serial.printf("-> Username: %s; userId: %s; pinId: %s; money: %d\n", user.username, user.userId, user.pinId, user.money);
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.printf("User %s", mName);
@@ -701,16 +701,16 @@ void taskPayMoney(void *arg)
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     // tinh tien
-    int balance = user.Money - calFee(newPin.capacity);
+    int balance = user.money - calFee(newPin.capacity);
 
     if (balance >= 0)
     {
       // update data to firebase
       FirebaseJson updateData;
       updateData.set("Money", (String)balance);
-      updateData.set("IDPin", fullPin.IDPin);
+      updateData.set("pinId", fullPin.pinId);
       char linkUpdate[15];
-      sprintf(linkUpdate, "/User/%s/", user.IDUser); // update node /User/IDUser/
+      sprintf(linkUpdate, "/User/%s/", user.userId); // update node /User/IDUser/
 
       if (Firebase.updateNode(firebaseData, linkUpdate, updateData))
       {

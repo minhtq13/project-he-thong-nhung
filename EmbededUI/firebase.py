@@ -10,7 +10,7 @@ from PIL import ImageTk, Image
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Đường dẫn đến tệp chứa thông tin xác thực từ Firebase
 cred = credentials.Certificate(
-    'C:/Users/MinhTQ3/Downloads/Embeded/demoesp32-1e57a-aab0031ce7e3.json')
+    'D:/HUST/20222/HTN/project-he-thong-nhung/EmbededUI/demoesp32-1e57a-aab0031ce7e3.json')
 # Khởi tạo ứng dụng Firebase với thông tin và URL của Firebase Realtime Database
 initialize_app(cred, {
                'databaseURL': 'https://demoesp32-1e57a-default-rtdb.asia-southeast1.firebasedatabase.app/'})
@@ -151,7 +151,7 @@ def refresh_report():
         report_listbox.insert(tk.END, "No report data available.")
 
 
-image_path = "template.png"  # Đường dẫn đến hình ảnh template
+image_path = "D:/HUST/20222/HTN/project-he-thong-nhung/EmbededUI/template.PNG"  # Đường dẫn đến hình ảnh template
 image = Image.open(image_path)  # Mở hình ảnh
 # Thay đổi kích thước hình ảnh
 image = image.resize((1000, 150), Image.ANTIALIAS)
